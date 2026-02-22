@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="003-create-events-table" author="a">
+        <createTable tableName="events">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="capacity" type="INT">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="subject_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="events" indexName="idx_events_subject_id">
+            <column name="subject_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="events"
+                                 baseColumnNames="subject_id"
+                                 constraintName="fk_events_subjects"
+                                 referencedTableName="subjects"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

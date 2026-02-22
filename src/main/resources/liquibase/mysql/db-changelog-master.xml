@@ -1,0 +1,12 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+     <include file="liquibase/mysql/setup/db-create-user-setup.xml"/>
+     <include file="liquibase/mysql/setup/db-create-subject-setup.xml"/>
+     <include file="liquibase/mysql/setup/db-create-event-setup.xml"/>
+     <include file="liquibase/mysql/setup/db-create-hall-setup.xml"/>
+     <include file="liquibase/mysql/setup/db-create-reservation-setup.xml"/>
+     <include file="liquibase/mysql/setup/db-changelog-setup.xml"/>
+</databaseChangeLog>

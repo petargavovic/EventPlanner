@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="006-create-reservations-table" author="a">
+        <createTable tableName="reservations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="start_time" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="end_time" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="description" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="hall_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="event_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="reservations" indexName="idx_reservations_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="reservations" indexName="idx_reservations_hall_id">
+            <column name="hall_id"/>
+        </createIndex>
+
+        <createIndex tableName="reservations" indexName="idx_reservations_event_id">
+            <column name="event_id"/>
+        </createIndex>
+
+        <createIndex tableName="reservations" indexName="idx_reservations_time_range">
+            <column name="start_time"/>
+            <column name="end_time"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="reservations"
+                                 baseColumnNames="user_id"
+                                 constraintName="fk_reservations_users"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="reservations"
+                                 baseColumnNames="hall_id"
+                                 constraintName="fk_reservations_halls"
+                                 referencedTableName="halls"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="reservations"
+                                 baseColumnNames="event_id"
+                                 constraintName="fk_reservations_events"
+                                 referencedTableName="events"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>
