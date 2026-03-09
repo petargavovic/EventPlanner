@@ -21,20 +21,20 @@ public class Hall {
     @Column(name = "location")
     private String location;
 
-    @Column(name = "type")
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private HallType type;
 
     @Column(name = "equipment")
     private String equipment;
 
-    // Hall (1) -> (*) Reservation
     @OneToMany(mappedBy = "hall")
     private List<Reservation> reservations;
 
     public Hall() {
     }
 
-    public Hall(Long id, String name, int capacity, String location, String type, String equipment) {
+    public Hall(Long id, String name, int capacity, String location, HallType type, String equipment) {
         this.id = id;
         this.name = name;
         this.capacity = capacity;
@@ -75,11 +75,11 @@ public class Hall {
         this.location = location;
     }
 
-    public String getType() {
+    public HallType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(HallType type) {
         this.type = type;
     }
 

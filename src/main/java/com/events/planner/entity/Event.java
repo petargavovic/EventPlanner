@@ -25,12 +25,10 @@ public class Event {
     @Column(name = "capacity")
     private int capacity;
 
-    // Event (*) -> (0..1) Subject
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
-    // Event (1) -> (*) Reservation
     @OneToMany(mappedBy = "event")
     private List<Reservation> reservations;
 
