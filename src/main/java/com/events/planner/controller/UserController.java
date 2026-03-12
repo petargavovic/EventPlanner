@@ -8,10 +8,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Users", description = "CRUD operations for users + login")
@@ -25,27 +28,49 @@ public class UserController {
         this.userService = userService;
     }
 
-    // CREATE
+    
     @Operation(summary = "Create user", description = "Creates a new user. Email must be unique.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Created",
-                    content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "Validation error",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+        @ApiResponse(responseCode = "201", description = "Created",
+                content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "400", description = "Validation error",
+                content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<UserDto> create(@RequestBody UserDto dto) throws Exception {
         return new ResponseEntity<>(userService.create(dto), HttpStatus.CREATED);
     }
 
-    // READ by id
+    @SecurityRequirement(name = "basicAuth")
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getMe(Authentication authentication) throws Exception {
+        return ResponseEntity.ok(userService.getByEmail(authentication.getName()));
+    }
+
+    @SecurityRequirement(name = "basicAuth")
+    @PutMapping("/me")
+    public ResponseEntity<UserDto> updateMe(
+            Authentication authentication,
+            @RequestBody UserDto dto) throws Exception {
+        return ResponseEntity.ok(userService.updateByEmail(authentication.getName(), dto));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserDto> register(@RequestBody UserDto dto) throws Exception {
+        dto.setAdmin(false);
+        return new ResponseEntity<>(userService.create(dto), HttpStatus.CREATED);
+    }
+
     @Operation(summary = "Get user by id")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "User not found",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+        @ApiResponse(responseCode = "200", description = "OK",
+                content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "400", description = "User not found",
+                content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @SecurityRequirement(name = "basicAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getById(
             @Parameter(description = "User id", example = "1")
@@ -53,11 +78,13 @@ public class UserController {
         return ResponseEntity.ok(userService.getById(id));
     }
 
-    // READ all (paged)
+    
     @Operation(summary = "Get all users (paged)")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK")
+        @ApiResponse(responseCode = "200", description = "OK")
     })
+    @SecurityRequirement(name = "basicAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<Page<UserDto>> getAll(
             @Parameter(description = "Page number (0-based)", example = "0")
@@ -67,14 +94,16 @@ public class UserController {
         return ResponseEntity.ok(userService.getAll(page, size));
     }
 
-    // UPDATE
+
     @Operation(summary = "Update user", description = "Updates an existing user by id.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "User not found / email already exists",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+        @ApiResponse(responseCode = "200", description = "OK",
+                content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "400", description = "User not found / email already exists",
+                content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @SecurityRequirement(name = "basicAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> update(
             @Parameter(description = "User id", example = "1")
@@ -83,13 +112,14 @@ public class UserController {
         return ResponseEntity.ok(userService.update(id, dto));
     }
 
-    // DELETE
     @Operation(summary = "Delete user")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Deleted"),
-            @ApiResponse(responseCode = "400", description = "User not found",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+        @ApiResponse(responseCode = "204", description = "Deleted"),
+        @ApiResponse(responseCode = "400", description = "User not found",
+                content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @SecurityRequirement(name = "basicAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "User id", example = "1")
@@ -98,20 +128,20 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // LOGIN (email + password only)
+
     @Operation(summary = "Login", description = "Returns user if email/password are correct.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid user",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+        @ApiResponse(responseCode = "200", description = "OK",
+                content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid user",
+                content = @Content(schema = @Schema(implementation = String.class)))
     })
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody UserDto dto) throws Exception {
         return ResponseEntity.ok(userService.login(dto.getEmail(), dto.getPassword()));
     }
 
-
+    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleException(Exception e) {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

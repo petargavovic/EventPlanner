@@ -4,12 +4,16 @@
  */
 package com.events.planner.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class UserDto {
 
     private Long id;
     private String name;
     private String surname;
     private String email;
+    
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private boolean admin;
 

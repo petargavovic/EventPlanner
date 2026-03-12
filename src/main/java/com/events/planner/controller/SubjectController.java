@@ -11,16 +11,19 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 /**
  *
  * @author MAU
  */
 @Tag(name = "Subjects", description = "CRUD operations for subjects")
+@SecurityRequirement(name = "basicAuth")
 @RestController
 @RequestMapping("/api/subjects")
 public class SubjectController {
@@ -38,6 +41,7 @@ public class SubjectController {
             @ApiResponse(responseCode = "400", description = "Validation error / code already exists",
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<SubjectDto> create(@RequestBody SubjectDto dto) throws Exception {
         return new ResponseEntity<>(subjectService.create(dto), HttpStatus.CREATED);
@@ -106,6 +110,7 @@ public class SubjectController {
             @ApiResponse(responseCode = "400", description = "Subject not found / code already exists",
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<SubjectDto> update(
             @Parameter(description = "Subject id", example = "1")
@@ -120,6 +125,7 @@ public class SubjectController {
             @ApiResponse(responseCode = "400", description = "Subject not found",
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "Subject id", example = "1")

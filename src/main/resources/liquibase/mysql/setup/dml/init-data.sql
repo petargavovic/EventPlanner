@@ -1,11 +1,11 @@
 INSERT INTO users (name, surname, email, password, admin)
-VALUES ('Ksenija', 'Pet', 'kp@gmail.com', 'pass', 0);
+VALUES ('Ksenija', 'Pet', 'kp@gmail.com', '$2a$12$QU19KNj3oGLai0IP0sjDDu/1zawwGaGDJJQxMVOOO67mtcKJfkcSy', 0);
 
 INSERT INTO users (name, surname, email, password, admin)
-VALUES ('Marko', 'Jovanovic', 'marko.j@gmail.com', 'pass123', 1);
+VALUES ('Marko', 'Jovanovic', 'marko.j@gmail.com', '$2a$12$QU19KNj3oGLai0IP0sjDDu/1zawwGaGDJJQxMVOOO67mtcKJfkcSy', 1);
 
 INSERT INTO users (name, surname, email, password, admin)
-VALUES ('Ana', 'Nikolic', 'ana.n@gmail.com', 'secret', 0);
+VALUES ('Ana', 'Nikolic', 'ana.n@gmail.com', '$2a$12$QU19KNj3oGLai0IP0sjDDu/1zawwGaGDJJQxMVOOO67mtcKJfkcSy', 0);
 
 
 INSERT INTO subjects (code, name)

@@ -1,7 +1,8 @@
-package com.events.planner.mapper.impl;
+ package com.events.planner.mapper.impl;
 
 import com.events.planner.dto.ReservationDto;
 import com.events.planner.entity.Reservation;
+import com.events.planner.entity.ReservationStatus;
 import com.events.planner.mapper.DtoEntityMapper;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ public class ReservationDtoEntityMapper implements DtoEntityMapper<ReservationDt
                 e.getId(),
                 e.getStart(),
                 e.getEnd(),
-                e.getStatus(),
+                e.getStatus() != null ? e.getStatus().name() : null,
                 e.getDescription(),
                 e.getTimestamp(),
                 e.getUser() != null ? e.getUser().getId() : null,
@@ -30,7 +31,7 @@ public class ReservationDtoEntityMapper implements DtoEntityMapper<ReservationDt
                 t.getId(),
                 t.getStart(),
                 t.getEnd(),
-                t.getStatus(),
+                t.getStatus() != null ? ReservationStatus.valueOf(t.getStatus().trim().toUpperCase()) : null,
                 t.getDescription(),
                 t.getTimestamp(),
                 null,
@@ -42,7 +43,7 @@ public class ReservationDtoEntityMapper implements DtoEntityMapper<ReservationDt
     public void updateEntity(Reservation entity, ReservationDto dto) {
         entity.setStart(dto.getStart());
         entity.setEnd(dto.getEnd());
-        entity.setStatus(dto.getStatus());
+        entity.setStatus(dto.getStatus()!= null ? ReservationStatus.valueOf(dto.getStatus().trim().toUpperCase()) : null);
         entity.setDescription(dto.getDescription());
         entity.setTimestamp(LocalDateTime.now());
     }

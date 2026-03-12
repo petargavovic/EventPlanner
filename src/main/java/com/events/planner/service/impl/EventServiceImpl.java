@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
  * @author MAU
  */
 @Service
-public class EventServiceImpl implements EventService{
+public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final SubjectRepository subjectRepository;
@@ -36,7 +36,7 @@ public class EventServiceImpl implements EventService{
 
     @Override
     public EventDto create(EventDto dto) throws Exception {
-  if (dto.getName() == null || dto.getName().isBlank()) {
+        if (dto.getName() == null || dto.getName().isBlank()) {
             throw new Exception("Event name is required.");
         }
         if (dto.getType() == null || dto.getType().isBlank()) {
@@ -57,15 +57,17 @@ public class EventServiceImpl implements EventService{
         }
 
         Event saved = eventRepository.save(event);
-        return eventMapper.toDto(saved);    }
+        return eventMapper.toDto(saved);
+    }
 
     @Override
     public EventDto getById(Long id) throws Exception {
-  return eventRepository.findById(id)
+        return eventRepository.findById(id)
                 .map(eventMapper::toDto)
-                .orElseThrow(() -> new Exception("Event not found."));    }
+                .orElseThrow(() -> new Exception("Event not found."));
+    }
 
-      @Override
+    @Override
     public Page<EventDto> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50));
         return eventRepository.findAll(pageable).map(eventMapper::toDto);
@@ -129,14 +131,12 @@ public class EventServiceImpl implements EventService{
         eventRepository.deleteById(id);
     }
 
-     private EventType parseEventType(String type) throws Exception {
+    private EventType parseEventType(String type) throws Exception {
         try {
             return EventType.valueOf(type.trim().toUpperCase());
         } catch (Exception e) {
             throw new Exception("Invalid event type.");
         }
     }
-    
-    
-    
+
 }

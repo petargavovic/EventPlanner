@@ -12,7 +12,8 @@ import org.springframework.data.domain.Page;
  * @author MAU
  */
 public interface ReservationService {
-      ReservationDto create(ReservationDto dto) throws Exception;
+
+    ReservationDto create(ReservationDto dto, String email) throws Exception;
 
     ReservationDto getById(Long id) throws Exception;
 
@@ -24,9 +25,15 @@ public interface ReservationService {
 
     Page<ReservationDto> getByEventId(Long eventId, int page, int size);
 
-    Page<ReservationDto> getByStatus(String status, int page, int size);
-
     ReservationDto update(Long id, ReservationDto dto) throws Exception;
+
+    ReservationDto updateStatus(Long id, String status) throws Exception;
+
+    ReservationDto cancelMyReservation(Long id, String email) throws Exception;
+
+    ReservationDto updateMyReservation(Long id, ReservationDto dto, String email) throws Exception;
+
+    Page<ReservationDto> getByStatus(String status, int page, int size) throws Exception;
 
     void delete(Long id) throws Exception;
 }

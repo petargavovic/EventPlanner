@@ -18,8 +18,9 @@ public class Reservation {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime end;
 
-    @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status",nullable = false)
+    private ReservationStatus status;
 
     @Column(name = "description")
     private String description;
@@ -42,8 +43,8 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(Long id, LocalDateTime start, LocalDateTime end, String status, String description,
-                       LocalDateTime timestamp, User user, Hall hall, Event event) {
+    public Reservation(Long id, LocalDateTime start, LocalDateTime end, ReservationStatus status, String description,
+            LocalDateTime timestamp, User user, Hall hall, Event event) {
         this.id = id;
         this.start = start;
         this.end = end;
@@ -79,11 +80,11 @@ public class Reservation {
         this.end = end;
     }
 
-    public String getStatus() {
+    public ReservationStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ReservationStatus status) {
         this.status = status;
     }
 

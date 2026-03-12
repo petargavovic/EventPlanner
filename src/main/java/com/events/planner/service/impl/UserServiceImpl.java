@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,10 +17,13 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserDtoEntityMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, UserDtoEntityMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, UserDtoEntityMapper userMapper,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -36,7 +40,10 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Email already exists.");
         }
 
-        User saved = userRepository.save(userMapper.toEntity(dto));
+        User user = userMapper.toEntity(dto);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        User saved = userRepository.save(user);
         return userMapper.toDto(saved);
     }
 
@@ -93,8 +100,45 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto login(String email, String password) throws Exception {
-        return userRepository.findByEmailAndPassword(email, password)
-                .map(userMapper::toDto)
-                .orElseThrow(() -> new Exception("Invalid user!"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception("Invalid email or password."));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new Exception("Invalid email or password.");
+        }
+
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    public UserDto updateByEmail(String email, UserDto dto) throws Exception {
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new Exception("User not found."));
+
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            String newEmail = dto.getEmail().trim().toLowerCase();
+
+            if (!newEmail.equals(user.getEmail())) {
+                if (userRepository.findByEmail(newEmail).isPresent()) {
+                    throw new Exception("Email already exists.");
+                }
+                user.setEmail(newEmail);
+            }
+        }
+
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        if (dto.getName() != null) {
+            user.setName(dto.getName());
+        }
+
+        if (dto.getSurname() != null) {
+            user.setSurname(dto.getSurname());
+        }
+
+        User saved = userRepository.save(user);
+        return userMapper.toDto(saved);
     }
 }

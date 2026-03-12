@@ -12,7 +12,8 @@ import org.springframework.data.domain.Page;
  * @author MAU
  */
 public interface SubjectService {
-     SubjectDto create(SubjectDto dto) throws Exception;
+
+    SubjectDto create(SubjectDto dto) throws Exception;
 
     SubjectDto getById(Long id) throws Exception;
 

@@ -12,16 +12,19 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 /**
  *
  * @author MAU
  */
 @Tag(name = "Halls", description = "CRUD operations for halls")
+@SecurityRequirement(name = "basicAuth")
 @RestController
 @RequestMapping("/api/halls")
 public class HallController {
@@ -39,6 +42,7 @@ public class HallController {
             @ApiResponse(responseCode = "400", description = "Validation error",
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<HallDto> create(@RequestBody HallDto dto) throws Exception {
         return new ResponseEntity<>(hallService.create(dto), HttpStatus.CREATED);
@@ -97,7 +101,7 @@ public class HallController {
             @Parameter(description = "Page number (0-based)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (max 50)", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size) throws Exception {
         return ResponseEntity.ok(hallService.getByType(type, page, size));
     }
 
@@ -123,6 +127,7 @@ public class HallController {
             @ApiResponse(responseCode = "400", description = "Hall not found / validation error",
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<HallDto> update(
             @Parameter(description = "Hall id", example = "1")
@@ -137,6 +142,7 @@ public class HallController {
             @ApiResponse(responseCode = "400", description = "Hall not found",
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "Hall id", example = "1")
