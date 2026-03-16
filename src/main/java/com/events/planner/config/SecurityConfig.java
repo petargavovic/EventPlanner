@@ -48,11 +48,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
-    ) {
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        //provider.setUserDetailsService(userDetailsService);
+
         provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
@@ -71,7 +70,6 @@ public class SecurityConfig {
                         "/swagger-ui.html",
                         "/v3/api-docs/**",
                         "/api/users/register"
-
                 ).permitAll()
                 .anyRequest().authenticated()
                 )
