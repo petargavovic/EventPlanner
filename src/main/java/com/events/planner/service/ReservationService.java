@@ -34,6 +34,8 @@ public interface ReservationService {
     ReservationDto updateMyReservation(Long id, ReservationDto dto, String email) throws Exception;
 
     Page<ReservationDto> getByStatus(String status, int page, int size) throws Exception;
+    
+    Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId);
 
     void delete(Long id) throws Exception;
 }

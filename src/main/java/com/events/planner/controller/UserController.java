@@ -70,7 +70,6 @@ public class UserController {
                 content = @Content(schema = @Schema(implementation = String.class)))
     })
     @SecurityRequirement(name = "basicAuth")
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getById(
             @Parameter(description = "User id", example = "1")
@@ -84,7 +83,6 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "OK")
     })
     @SecurityRequirement(name = "basicAuth")
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<Page<UserDto>> getAll(
             @Parameter(description = "Page number (0-based)", example = "0")

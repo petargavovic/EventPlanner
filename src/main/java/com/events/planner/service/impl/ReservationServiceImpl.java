@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 /**
@@ -249,6 +250,36 @@ public class ReservationServiceImpl implements ReservationService {
         dto.setUserId(reservation.getUser().getId());
 
         return update(id, dto);
+    }
+    
+    @Override
+    public Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId) {
+        Pageable pageable = PageRequest.of(page, size);
+
+    Specification<Reservation> spec = (root, query, cb) -> cb.conjunction();
+
+    if (status != null && !status.isBlank()) {
+        spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("status"), ReservationStatus.valueOf(status)));
+    }
+
+    if (userId != null) {
+        spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("user").get("id"), userId));
+    }
+
+    if (hallId != null) {
+        spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("hall").get("id"), hallId));
+    }
+
+    if (eventId != null) {
+        spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("event").get("id"), eventId));
+    }
+
+    return reservationRepository.findAll(spec, pageable)
+            .map(reservationMapper::toDto);
     }
 
     private ReservationStatus parseReservationStatus(String status) throws Exception {

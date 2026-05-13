@@ -67,78 +67,32 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getById(id));
     }
 
-    @Operation(summary = "Get all reservations (paged)")
+    @Operation(summary = "Get all reservations (paged) with filters")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK")
     })
-    @GetMapping
-    public ResponseEntity<Page<ReservationDto>> getAll(
-            @Parameter(description = "Page number (0-based)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (max 50)", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(reservationService.getAll(page, size));
-    }
+@GetMapping
+public ResponseEntity<Page<ReservationDto>> getAll(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
 
-    @Operation(summary = "Get reservations by user id")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "OK")
-    })
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<Page<ReservationDto>> getByUserId(
-            @Parameter(description = "User id", example = "1")
-            @PathVariable Long userId,
-            @Parameter(description = "Page number (0-based)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (max 50)", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(reservationService.getByUserId(userId, page, size));
-    }
+        @RequestParam(required = false) String status,
+        @RequestParam(required = false) Long userId,
+        @RequestParam(required = false) Long hallId,
+        @RequestParam(required = false) Long eventId
+) {
+    return ResponseEntity.ok(
+            reservationService.getFiltered(
+                    page,
+                    size,
+                    status,
+                    userId,
+                    hallId,
+                    eventId
+            )
+    );
+}
 
-    @Operation(summary = "Get reservations by hall id")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "OK")
-    })
-    @GetMapping("/hall/{hallId}")
-    public ResponseEntity<Page<ReservationDto>> getByHallId(
-            @Parameter(description = "Hall id", example = "1")
-            @PathVariable Long hallId,
-            @Parameter(description = "Page number (0-based)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (max 50)", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(reservationService.getByHallId(hallId, page, size));
-    }
-
-    @Operation(summary = "Get reservations by event id")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "OK")
-    })
-    @GetMapping("/event/{eventId}")
-    public ResponseEntity<Page<ReservationDto>> getByEventId(
-            @Parameter(description = "Event id", example = "1")
-            @PathVariable Long eventId,
-            @Parameter(description = "Page number (0-based)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (max 50)", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(reservationService.getByEventId(eventId, page, size));
-    }
-
-    @Operation(summary = "Get reservations by status")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "OK")
-    })
-    @GetMapping("/status")
-    public ResponseEntity<Page<ReservationDto>> getByStatus(
-            @Parameter(description = "Reservation status", example = "APPROVED")
-            @RequestParam String status,
-            @Parameter(description = "Page number (0-based)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (max 50)", example = "10")
-            @RequestParam(defaultValue = "10") int size) throws Exception {
-        return ResponseEntity.ok(reservationService.getByStatus(status, page, size));
-    }
 
     @Operation(summary = "Update reservation", description = "Updates an existing reservation by id.")
     @ApiResponses({
@@ -147,7 +101,6 @@ public class ReservationController {
         @ApiResponse(responseCode = "400", description = "Reservation not found / validation error / hall conflict",
                 content = @Content(schema = @Schema(implementation = String.class)))
     })
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ReservationDto> update(
             @Parameter(description = "Reservation id", example = "1")
@@ -165,7 +118,6 @@ public class ReservationController {
         @ApiResponse(responseCode = "400", description = "Reservation not found",
                 content = @Content(schema = @Schema(implementation = String.class)))
     })
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "Reservation id", example = "1")
