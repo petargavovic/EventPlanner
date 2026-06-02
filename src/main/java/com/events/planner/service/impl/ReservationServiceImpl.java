@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -253,8 +254,28 @@ public class ReservationServiceImpl implements ReservationService {
     }
     
     @Override
-    public Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId, 
+            String sortBy, String sortDir) {
+        switch (sortBy) {
+    case "user":
+        sortBy = "user.name";
+        break;
+    case "hall":
+        sortBy = "hall.name";
+        break;
+    case "event":
+        sortBy = "event.name";
+        break;
+    case "created":
+        sortBy = "timestamp";
+        break;
+}
+
+Sort sort = sortDir.equalsIgnoreCase("desc")
+        ? Sort.by(sortBy).descending()
+        : Sort.by(sortBy).ascending();
+
+Pageable pageable = PageRequest.of(page, size, sort);
 
     Specification<Reservation> spec = (root, query, cb) -> cb.conjunction();
 

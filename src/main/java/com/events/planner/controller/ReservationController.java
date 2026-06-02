@@ -79,7 +79,10 @@ public ResponseEntity<Page<ReservationDto>> getAll(
         @RequestParam(required = false) String status,
         @RequestParam(required = false) Long userId,
         @RequestParam(required = false) Long hallId,
-        @RequestParam(required = false) Long eventId
+        @RequestParam(required = false) Long eventId,
+
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "asc") String sortDir
 ) {
     return ResponseEntity.ok(
             reservationService.getFiltered(
@@ -88,7 +91,9 @@ public ResponseEntity<Page<ReservationDto>> getAll(
                     status,
                     userId,
                     hallId,
-                    eventId
+                    eventId,
+                    sortBy,
+                    sortDir
             )
     );
 }

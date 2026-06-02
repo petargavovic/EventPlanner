@@ -35,7 +35,7 @@ public interface ReservationService {
 
     Page<ReservationDto> getByStatus(String status, int page, int size) throws Exception;
     
-    Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId);
+    Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId, String sortBy, String sortDir);
 
     void delete(Long id) throws Exception;
 }
