@@ -131,13 +131,15 @@ public ResponseEntity<Page<ReservationDto>> getAll(
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<ReservationDto> updateStatus(
-            @PathVariable Long id,
-            @RequestParam String status) throws Exception {
-        return ResponseEntity.ok(reservationService.updateStatus(id, status));
-    }
+@PatchMapping("/{id}/status")
+public ResponseEntity<ReservationDto> updateStatus(
+        @PathVariable Long id,
+        @RequestParam String status,
+        Authentication authentication) throws Exception {
+    return ResponseEntity.ok(
+            reservationService.updateStatus(id, status, authentication)
+    );
+}
 
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<ReservationDto> cancelMyReservation(

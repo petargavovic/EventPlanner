@@ -28,7 +28,7 @@ public interface ReservationService {
 
     ReservationDto update(Long id, ReservationDto dto, Authentication authentication) throws Exception;
 
-    ReservationDto updateStatus(Long id, String status) throws Exception;
+    ReservationDto updateStatus(Long id, String status, Authentication authentication) throws Exception;
 
     ReservationDto cancelMyReservation(Long id, String email) throws Exception;
 

@@ -53,7 +53,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public ReservationDto create(ReservationDto dto, String email) throws Exception {
-        validateReservation(dto,false);
+        validateReservation(dto, false);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("User not found."));
@@ -117,7 +117,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public ReservationDto update(Long id, ReservationDto dto, Authentication authentication) throws Exception {
-        validateReservation(dto,true);
+        validateReservation(dto, true);
 
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new Exception("Reservation not found."));
@@ -130,22 +130,22 @@ public class ReservationServiceImpl implements ReservationService {
 
         Event event = eventRepository.findById(dto.getEventId())
                 .orElseThrow(() -> new Exception("Event not found."));
-        
+
         boolean isAdmin = authentication.getAuthorities().stream()
-        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         String email = authentication.getName();
-        
-            if (!isAdmin) {
 
-        if (!reservation.getUser().getEmail().equals(email)) {
-            throw new Exception("You can only edit your own reservations.");
-        }
+        if (!isAdmin) {
 
-        if (reservation.getStatus() != ReservationStatus.PENDING) {
-            throw new Exception("Only PENDING reservations can be edited.");
+            if (!reservation.getUser().getEmail().equals(email)) {
+                throw new Exception("You can only edit your own reservations.");
+            }
+
+            if (reservation.getStatus() != ReservationStatus.PENDING) {
+                throw new Exception("Only PENDING reservations can be edited.");
+            }
         }
-    }
 
         if (reservation.getStatus() == ReservationStatus.APPROVED) {
             boolean conflict = reservationRepository.existsHallReservationConflict(
@@ -177,11 +177,31 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationDto updateStatus(Long id, String status) throws Exception {
+    public ReservationDto updateStatus(Long id, String status, Authentication authentication) throws Exception {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new Exception("Reservation not found."));
-            
+
         ReservationStatus newStatus = parseReservationStatus(status);
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        String email = authentication.getName();
+
+        if (!isAdmin) {
+            if (!reservation.getUser().getEmail().equals(email)) {
+                throw new Exception("You can only change status of your own reservations.");
+            }
+
+            if (newStatus != ReservationStatus.CANCELLED) {
+                throw new Exception("Users can only cancel their own reservations.");
+            }
+
+            if (reservation.getStatus() != ReservationStatus.PENDING
+                    && reservation.getStatus() != ReservationStatus.APPROVED) {
+                throw new Exception("Only PENDING or APPROVED reservations can be cancelled.");
+            }
+        }
 
         if (newStatus == ReservationStatus.APPROVED) {
             boolean conflict = reservationRepository.existsHallReservationConflict(
@@ -196,8 +216,6 @@ public class ReservationServiceImpl implements ReservationService {
                 throw new Exception("Cannot approve reservation. Hall is already reserved in that time period.");
             }
         }
-        else if(newStatus == ReservationStatus.CANCELLED)
-            System.out.println("Cancelled");
 
         reservation.setStatus(newStatus);
 
@@ -225,12 +243,12 @@ public class ReservationServiceImpl implements ReservationService {
         }
         LocalTime openingTime = LocalTime.of(8, 0);
         LocalTime closingTime = LocalTime.of(20, 0);
-    if (dto.getStart().toLocalTime().isBefore(openingTime)) {
-        throw new Exception("Reservations cannot start before 08:00.");
-    }
-    if (dto.getEnd().toLocalTime().isAfter(closingTime)) {
-        throw new Exception("Reservations must end by 20:00.");
-    }
+        if (dto.getStart().toLocalTime().isBefore(openingTime)) {
+            throw new Exception("Reservations cannot start before 08:00.");
+        }
+        if (dto.getEnd().toLocalTime().isAfter(closingTime)) {
+            throw new Exception("Reservations must end by 20:00.");
+        }
         if (requireUserId && dto.getUserId() == null) {
             throw new Exception("User ID is required.");
         }
@@ -253,7 +271,7 @@ public class ReservationServiceImpl implements ReservationService {
         if (!reservation.getUser().getId().equals(user.getId())) {
             throw new Exception("You can cancel only your own reservation.");
         }
-            
+
         reservation.setStatus(ReservationStatus.CANCELLED);
 
         Reservation saved = reservationRepository.save(reservation);
@@ -279,58 +297,58 @@ public class ReservationServiceImpl implements ReservationService {
         dto.setUserId(reservation.getUser().getId());
 
         Authentication auth = null;
-        
+
         return update(id, dto, auth);
     }
-    
+
     @Override
-    public Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId, 
+    public Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId,
             String sortBy, String sortDir) {
         switch (sortBy) {
-    case "user":
-        sortBy = "user.name";
-        break;
-    case "hall":
-        sortBy = "hall.name";
-        break;
-    case "event":
-        sortBy = "event.name";
-        break;
-    case "created":
-        sortBy = "timestamp";
-        break;
-}
+            case "user":
+                sortBy = "user.name";
+                break;
+            case "hall":
+                sortBy = "hall.name";
+                break;
+            case "event":
+                sortBy = "event.name";
+                break;
+            case "created":
+                sortBy = "timestamp";
+                break;
+        }
 
-Sort sort = sortDir.equalsIgnoreCase("desc")
-        ? Sort.by(sortBy).descending()
-        : Sort.by(sortBy).ascending();
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
 
-Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-    Specification<Reservation> spec = (root, query, cb) -> cb.conjunction();
+        Specification<Reservation> spec = (root, query, cb) -> cb.conjunction();
 
-    if (status != null && !status.isBlank()) {
-        spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("status"), ReservationStatus.valueOf(status)));
-    }
+        if (status != null && !status.isBlank()) {
+            spec = spec.and((root, query, cb)
+                    -> cb.equal(root.get("status"), ReservationStatus.valueOf(status)));
+        }
 
-    if (userId != null) {
-        spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("user").get("id"), userId));
-    }
+        if (userId != null) {
+            spec = spec.and((root, query, cb)
+                    -> cb.equal(root.get("user").get("id"), userId));
+        }
 
-    if (hallId != null) {
-        spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("hall").get("id"), hallId));
-    }
+        if (hallId != null) {
+            spec = spec.and((root, query, cb)
+                    -> cb.equal(root.get("hall").get("id"), hallId));
+        }
 
-    if (eventId != null) {
-        spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("event").get("id"), eventId));
-    }
+        if (eventId != null) {
+            spec = spec.and((root, query, cb)
+                    -> cb.equal(root.get("event").get("id"), eventId));
+        }
 
-    return reservationRepository.findAll(spec, pageable)
-            .map(reservationMapper::toDto);
+        return reservationRepository.findAll(spec, pageable)
+                .map(reservationMapper::toDto);
     }
 
     private ReservationStatus parseReservationStatus(String status) throws Exception {
