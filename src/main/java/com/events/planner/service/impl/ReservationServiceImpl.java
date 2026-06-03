@@ -17,11 +17,13 @@ import com.events.planner.repository.ReservationRepository;
 import com.events.planner.repository.UserRepository;
 import com.events.planner.service.ReservationService;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 /**
@@ -114,7 +116,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationDto update(Long id, ReservationDto dto) throws Exception {
+    public ReservationDto update(Long id, ReservationDto dto, Authentication authentication) throws Exception {
         validateReservation(dto,true);
 
         Reservation reservation = reservationRepository.findById(id)
@@ -128,6 +130,22 @@ public class ReservationServiceImpl implements ReservationService {
 
         Event event = eventRepository.findById(dto.getEventId())
                 .orElseThrow(() -> new Exception("Event not found."));
+        
+        boolean isAdmin = authentication.getAuthorities().stream()
+        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        String email = authentication.getName();
+        
+            if (!isAdmin) {
+
+        if (!reservation.getUser().getEmail().equals(email)) {
+            throw new Exception("You can only edit your own reservations.");
+        }
+
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new Exception("Only PENDING reservations can be edited.");
+        }
+    }
 
         if (reservation.getStatus() == ReservationStatus.APPROVED) {
             boolean conflict = reservationRepository.existsHallReservationConflict(
@@ -162,7 +180,7 @@ public class ReservationServiceImpl implements ReservationService {
     public ReservationDto updateStatus(Long id, String status) throws Exception {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new Exception("Reservation not found."));
-
+            
         ReservationStatus newStatus = parseReservationStatus(status);
 
         if (newStatus == ReservationStatus.APPROVED) {
@@ -178,6 +196,8 @@ public class ReservationServiceImpl implements ReservationService {
                 throw new Exception("Cannot approve reservation. Hall is already reserved in that time period.");
             }
         }
+        else if(newStatus == ReservationStatus.CANCELLED)
+            System.out.println("Cancelled");
 
         reservation.setStatus(newStatus);
 
@@ -203,6 +223,14 @@ public class ReservationServiceImpl implements ReservationService {
         if (!dto.getEnd().isAfter(dto.getStart())) {
             throw new Exception("End time must be after start time.");
         }
+        LocalTime openingTime = LocalTime.of(8, 0);
+        LocalTime closingTime = LocalTime.of(20, 0);
+    if (dto.getStart().toLocalTime().isBefore(openingTime)) {
+        throw new Exception("Reservations cannot start before 08:00.");
+    }
+    if (dto.getEnd().toLocalTime().isAfter(closingTime)) {
+        throw new Exception("Reservations must end by 20:00.");
+    }
         if (requireUserId && dto.getUserId() == null) {
             throw new Exception("User ID is required.");
         }
@@ -225,7 +253,7 @@ public class ReservationServiceImpl implements ReservationService {
         if (!reservation.getUser().getId().equals(user.getId())) {
             throw new Exception("You can cancel only your own reservation.");
         }
-
+            
         reservation.setStatus(ReservationStatus.CANCELLED);
 
         Reservation saved = reservationRepository.save(reservation);
@@ -244,13 +272,15 @@ public class ReservationServiceImpl implements ReservationService {
             throw new Exception("You can update only your own reservation.");
         }
 
-        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
-            throw new Exception("Cancelled reservation cannot be updated.");
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new Exception(reservation.getStatus() + " reservation cannot be updated.");
         }
 
         dto.setUserId(reservation.getUser().getId());
 
-        return update(id, dto);
+        Authentication auth = null;
+        
+        return update(id, dto, auth);
     }
     
     @Override

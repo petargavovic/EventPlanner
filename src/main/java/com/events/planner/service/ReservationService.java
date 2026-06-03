@@ -6,6 +6,7 @@ package com.events.planner.service;
 
 import com.events.planner.dto.ReservationDto;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
 
 /**
  *
@@ -25,7 +26,7 @@ public interface ReservationService {
 
     Page<ReservationDto> getByEventId(Long eventId, int page, int size);
 
-    ReservationDto update(Long id, ReservationDto dto) throws Exception;
+    ReservationDto update(Long id, ReservationDto dto, Authentication authentication) throws Exception;
 
     ReservationDto updateStatus(Long id, String status) throws Exception;
 

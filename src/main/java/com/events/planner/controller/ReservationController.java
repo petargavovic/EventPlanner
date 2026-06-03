@@ -113,7 +113,7 @@ public ResponseEntity<Page<ReservationDto>> getAll(
             @RequestBody ReservationDto dto,
             Authentication authentication) throws Exception {
         return ResponseEntity.ok(
-                reservationService.update(id, dto)
+                reservationService.update(id, dto, authentication)
         );
     }
 
