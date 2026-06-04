@@ -30,10 +30,6 @@ public interface ReservationService {
 
     ReservationDto updateStatus(Long id, String status, Authentication authentication) throws Exception;
 
-    ReservationDto cancelMyReservation(Long id, String email) throws Exception;
-
-    ReservationDto updateMyReservation(Long id, ReservationDto dto, String email) throws Exception;
-
     Page<ReservationDto> getByStatus(String status, int page, int size) throws Exception;
     
     Page<ReservationDto> getFiltered(int page, int size, String status, Long userId, Long hallId, Long eventId, String sortBy, String sortDir);

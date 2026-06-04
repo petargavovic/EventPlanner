@@ -71,33 +71,30 @@ public class ReservationController {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK")
     })
-@GetMapping
-public ResponseEntity<Page<ReservationDto>> getAll(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size,
-
-        @RequestParam(required = false) String status,
-        @RequestParam(required = false) Long userId,
-        @RequestParam(required = false) Long hallId,
-        @RequestParam(required = false) Long eventId,
-
-        @RequestParam(defaultValue = "id") String sortBy,
-        @RequestParam(defaultValue = "asc") String sortDir
-) {
-    return ResponseEntity.ok(
-            reservationService.getFiltered(
-                    page,
-                    size,
-                    status,
-                    userId,
-                    hallId,
-                    eventId,
-                    sortBy,
-                    sortDir
-            )
-    );
-}
-
+    @GetMapping
+    public ResponseEntity<Page<ReservationDto>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long hallId,
+            @RequestParam(required = false) Long eventId,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        return ResponseEntity.ok(
+                reservationService.getFiltered(
+                        page,
+                        size,
+                        status,
+                        userId,
+                        hallId,
+                        eventId,
+                        sortBy,
+                        sortDir
+                )
+        );
+    }
 
     @Operation(summary = "Update reservation", description = "Updates an existing reservation by id.")
     @ApiResponses({
@@ -131,32 +128,13 @@ public ResponseEntity<Page<ReservationDto>> getAll(
         return ResponseEntity.noContent().build();
     }
 
-@PatchMapping("/{id}/status")
-public ResponseEntity<ReservationDto> updateStatus(
-        @PathVariable Long id,
-        @RequestParam String status,
-        Authentication authentication) throws Exception {
-    return ResponseEntity.ok(
-            reservationService.updateStatus(id, status, authentication)
-    );
-}
-
-    @PatchMapping("/{id}/cancel")
-    public ResponseEntity<ReservationDto> cancelMyReservation(
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ReservationDto> updateStatus(
             @PathVariable Long id,
+            @RequestParam String status,
             Authentication authentication) throws Exception {
         return ResponseEntity.ok(
-                reservationService.cancelMyReservation(id, authentication.getName())
-        );
-    }
-
-    @PutMapping("/{id}/me")
-    public ResponseEntity<ReservationDto> updateMyReservation(
-            @PathVariable Long id,
-            @RequestBody ReservationDto dto,
-            Authentication authentication) throws Exception {
-        return ResponseEntity.ok(
-                reservationService.updateMyReservation(id, dto, authentication.getName())
+                reservationService.updateStatus(id, status, authentication)
         );
     }
 

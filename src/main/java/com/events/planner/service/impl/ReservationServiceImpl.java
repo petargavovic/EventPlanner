@@ -64,6 +64,10 @@ public class ReservationServiceImpl implements ReservationService {
         Event event = eventRepository.findById(dto.getEventId())
                 .orElseThrow(() -> new Exception("Event not found."));
 
+        if (event.getCapacity() > hall.getCapacity()) {
+            throw new Exception("Selected event requires more capacity than the chosen hall.");
+        }
+
         Reservation reservation = reservationMapper.toEntity(dto);
         reservation.setUser(user);
         reservation.setHall(hall);
@@ -145,6 +149,10 @@ public class ReservationServiceImpl implements ReservationService {
             if (reservation.getStatus() != ReservationStatus.PENDING) {
                 throw new Exception("Only PENDING reservations can be edited.");
             }
+        }
+
+        if (event.getCapacity() > hall.getCapacity()) {
+            throw new Exception("Selected event requires more capacity than the chosen hall.");
         }
 
         if (reservation.getStatus() == ReservationStatus.APPROVED) {
@@ -258,47 +266,6 @@ public class ReservationServiceImpl implements ReservationService {
         if (dto.getEventId() == null) {
             throw new Exception("Event ID is required.");
         }
-    }
-
-    @Override
-    public ReservationDto cancelMyReservation(Long id, String email) throws Exception {
-        Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new Exception("Reservation not found."));
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new Exception("User not found."));
-
-        if (!reservation.getUser().getId().equals(user.getId())) {
-            throw new Exception("You can cancel only your own reservation.");
-        }
-
-        reservation.setStatus(ReservationStatus.CANCELLED);
-
-        Reservation saved = reservationRepository.save(reservation);
-        return reservationMapper.toDto(saved);
-    }
-
-    @Override
-    public ReservationDto updateMyReservation(Long id, ReservationDto dto, String email) throws Exception {
-        Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new Exception("Reservation not found."));
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new Exception("User not found."));
-
-        if (!reservation.getUser().getId().equals(user.getId())) {
-            throw new Exception("You can update only your own reservation.");
-        }
-
-        if (reservation.getStatus() != ReservationStatus.PENDING) {
-            throw new Exception(reservation.getStatus() + " reservation cannot be updated.");
-        }
-
-        dto.setUserId(reservation.getUser().getId());
-
-        Authentication auth = null;
-
-        return update(id, dto, auth);
     }
 
     @Override
