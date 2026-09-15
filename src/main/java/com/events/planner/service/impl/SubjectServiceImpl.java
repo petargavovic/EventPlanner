@@ -9,6 +9,7 @@ import com.events.planner.entity.Subject;
 import com.events.planner.mapper.impl.SubjectDtoEntityMapper;
 import com.events.planner.repository.SubjectRepository;
 import com.events.planner.service.SubjectService;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class SubjectServiceImpl implements SubjectService{
+
+    private static final String SUBJECT_NOT_FOUND = "Subject not found.";
     private final SubjectRepository subjectRepository;
     private final SubjectDtoEntityMapper subjectMapper;
 
@@ -51,7 +54,7 @@ public class SubjectServiceImpl implements SubjectService{
     public SubjectDto getById(Long id) throws Exception {
         return subjectRepository.findById(id)
                 .map(subjectMapper::toDto)
-                .orElseThrow(() -> new Exception("Subject not found."));
+                .orElseThrow(() -> new Exception(SUBJECT_NOT_FOUND));
     }
 
     @Override
@@ -64,7 +67,7 @@ public class SubjectServiceImpl implements SubjectService{
     public SubjectDto getByCode(String code) throws Exception {
         return subjectRepository.findByCode(code)
                 .map(subjectMapper::toDto)
-                .orElseThrow(() -> new Exception("Subject not found."));
+                .orElseThrow(() -> new Exception(SUBJECT_NOT_FOUND));
     }
 
     @Override
@@ -76,7 +79,7 @@ public class SubjectServiceImpl implements SubjectService{
     @Override
     public SubjectDto update(Long id, SubjectDto dto) throws Exception {
         Subject subject = subjectRepository.findById(id)
-                .orElseThrow(() -> new Exception("Subject not found."));
+                .orElseThrow(() -> new Exception(SUBJECT_NOT_FOUND));
 
         if (dto.getCode() == null || dto.getCode().isBlank()) {
             throw new Exception("Subject code is required.");
@@ -100,7 +103,7 @@ public class SubjectServiceImpl implements SubjectService{
     @Override
     public void delete(Long id) throws Exception {
         if (!subjectRepository.existsById(id)) {
-            throw new Exception("Subject not found.");
+            throw new NoSuchElementException(SUBJECT_NOT_FOUND);
         }
         subjectRepository.deleteById(id);
     }

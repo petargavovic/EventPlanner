@@ -33,17 +33,7 @@ public class HallServiceImpl implements HallService {
 
     @Override
     public HallDto create(HallDto dto) throws Exception {
-        if (dto.getName() == null || dto.getName().isBlank()) {
-            throw new Exception("Hall name is required.");
-        }
-        if (dto.getType() == null || dto.getType().isBlank()) {
-            throw new Exception("Hall type is required.");
-        }
-        if (dto.getCapacity() < 0) {
-            throw new Exception("Capacity cannot be negative.");
-        }
-
-        parseHallType(dto.getType());
+        validateHall(dto);
 
         Hall saved = hallRepository.save(hallMapper.toEntity(dto));
         return hallMapper.toDto(saved);
@@ -86,17 +76,7 @@ public class HallServiceImpl implements HallService {
         Hall hall = hallRepository.findById(id)
                 .orElseThrow(() -> new Exception("Hall not found."));
 
-        if (dto.getName() == null || dto.getName().isBlank()) {
-            throw new Exception("Hall name is required.");
-        }
-        if (dto.getType() == null || dto.getType().isBlank()) {
-            throw new Exception("Hall type is required.");
-        }
-        if (dto.getCapacity() < 0) {
-            throw new Exception("Capacity cannot be negative.");
-        }
-
-        parseHallType(dto.getType());
+        validateHall(dto);
 
         hallMapper.updateEntity(hall, dto);
         Hall saved = hallRepository.save(hall);
@@ -109,6 +89,20 @@ public class HallServiceImpl implements HallService {
             throw new Exception("Hall not found.");
         }
         hallRepository.deleteById(id);
+    }
+
+    private void validateHall(HallDto dto) throws Exception {
+        if (dto.getName() == null || dto.getName().isBlank()) {
+            throw new Exception("Hall name is required.");
+        }
+        if (dto.getType() == null || dto.getType().isBlank()) {
+            throw new Exception("Hall type is required.");
+        }
+        if (dto.getCapacity() < 0) {
+            throw new Exception("Capacity cannot be negative.");
+        }
+
+        parseHallType(dto.getType());
     }
 
     private HallType parseHallType(String type) throws Exception {

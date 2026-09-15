@@ -5,6 +5,7 @@ import com.events.planner.entity.User;
 import com.events.planner.mapper.impl.UserDtoEntityMapper;
 import com.events.planner.repository.UserRepository;
 import com.events.planner.service.UserService;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final String USER_NOT_FOUND = "User not found.";
 
     private final UserRepository userRepository;
     private final UserDtoEntityMapper userMapper;
@@ -51,7 +54,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getById(Long id) throws Exception {
         return userRepository.findById(id)
                 .map(userMapper::toDto)
-                .orElseThrow(() -> new Exception("User not found."));
+                .orElseThrow(() -> new Exception(USER_NOT_FOUND));
     }
 
     @Override
@@ -64,7 +67,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getByEmail(String email) throws Exception {
         return userRepository.findByEmail(email)
                 .map(userMapper::toDto)
-                .orElseThrow(() -> new Exception("User not found."));
+                .orElseThrow(() -> new Exception(USER_NOT_FOUND));
     }
 
     @Override
@@ -76,7 +79,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto update(Long id, UserDto dto) throws Exception {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new Exception("User not found."));
+                .orElseThrow(() -> new Exception(USER_NOT_FOUND));
 
         if (dto.getEmail() != null && !dto.getEmail().equals(user.getEmail())) {
             Optional<User> existing = userRepository.findByEmail(dto.getEmail());
@@ -93,7 +96,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(Long id) throws Exception {
         if (!userRepository.existsById(id)) {
-            throw new Exception("User not found.");
+            throw new NoSuchElementException(USER_NOT_FOUND);
         }
         userRepository.deleteById(id);
     }
@@ -113,7 +116,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto updateByEmail(String email, UserDto dto) throws Exception {
         User user = userRepository.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new Exception("User not found."));
+                .orElseThrow(() -> new Exception(USER_NOT_FOUND));
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
             String newEmail = dto.getEmail().trim().toLowerCase();

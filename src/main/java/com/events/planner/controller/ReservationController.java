@@ -5,6 +5,7 @@
 package com.events.planner.controller;
 
 import com.events.planner.dto.ReservationDto;
+import com.events.planner.dto.ReservationHistoryDto;
 import com.events.planner.service.ReservationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 /**
  *
@@ -65,6 +67,18 @@ public class ReservationController {
             @Parameter(description = "Reservation id", example = "1")
             @PathVariable Long id) throws Exception {
         return ResponseEntity.ok(reservationService.getById(id));
+    }
+    
+    @Operation(summary = "Get reservation history",
+            description = "Returns all stored snapshots for a reservation in chronological order. ")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "OK")
+    })
+    @GetMapping("/{id}/history")
+    public ResponseEntity<List<ReservationHistoryDto>> getHistory(
+            @Parameter(description = "Reservation id", example = "1")
+            @PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.getHistory(id));
     }
 
     @Operation(summary = "Get all reservations (paged) with filters")
@@ -123,8 +137,9 @@ public class ReservationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "Reservation id", example = "1")
-            @PathVariable Long id) throws Exception {
-        reservationService.delete(id);
+            @PathVariable Long id,
+            Authentication authentication) throws Exception {
+        reservationService.delete(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 

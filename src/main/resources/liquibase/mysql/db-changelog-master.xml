@@ -8,5 +8,6 @@
      <include file="liquibase/mysql/setup/db-create-event-setup.xml"/>
      <include file="liquibase/mysql/setup/db-create-hall-setup.xml"/>
      <include file="liquibase/mysql/setup/db-create-reservation-setup.xml"/>
+     <include file="liquibase/mysql/setup/db-create-reservation-history-setup.xml"/>
      <include file="liquibase/mysql/setup/db-changelog-setup.xml"/>
 </databaseChangeLog>
