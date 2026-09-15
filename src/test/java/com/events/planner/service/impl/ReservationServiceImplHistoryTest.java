@@ -269,7 +269,7 @@ public class ReservationServiceImplHistoryTest {
         when(reservationHistoryRepository.findByReservationIdOrderByChangedAtAscIdAsc(RESERVATION_ID))
                 .thenReturn(List.of(created, updated, deleted));
 
-        List<ReservationHistoryDto> history = reservationService.getHistory(RESERVATION_ID);
+        List<ReservationHistoryDto> history = reservationService.getHistory(RESERVATION_ID, null);
 
         assertEquals(history.size(), 3);
         assertEquals(history.get(0).getAction(), "CREATED");
@@ -281,8 +281,47 @@ public class ReservationServiceImplHistoryTest {
         assertEquals(history.get(0).getReservationId(), RESERVATION_ID);
     }
 
-    // negative tests
-    
+    @Test
+    public void shouldFilterReservationHistoryByAction() {
+        LocalDateTime firstUpdateAt = LocalDateTime.of(2026, 9, 20, 11, 0);
+        LocalDateTime secondUpdateAt = LocalDateTime.of(2026, 9, 20, 12, 0);
+
+        ReservationHistory firstUpdate = historyEntry(
+                2L,
+                ReservationHistoryAction.UPDATED,
+                firstUpdateAt
+        );
+        ReservationHistory secondUpdate = historyEntry(
+                3L,
+                ReservationHistoryAction.UPDATED,
+                secondUpdateAt
+        );
+
+        when(reservationHistoryRepository
+                .findByReservationIdAndActionOrderByChangedAtAscIdAsc(
+                        RESERVATION_ID,
+                        ReservationHistoryAction.UPDATED))
+                .thenReturn(List.of(firstUpdate, secondUpdate));
+
+        List<ReservationHistoryDto> history = reservationService.getHistory(
+                RESERVATION_ID,
+                ReservationHistoryAction.UPDATED
+        );
+
+        assertEquals(history.size(), 2);
+        assertEquals(history.get(0).getAction(), "UPDATED");
+        assertEquals(history.get(1).getAction(), "UPDATED");
+        assertEquals(history.get(0).getChangedAt(), firstUpdateAt);
+        assertEquals(history.get(1).getChangedAt(), secondUpdateAt);
+
+        verify(reservationHistoryRepository)
+                .findByReservationIdAndActionOrderByChangedAtAscIdAsc(
+                        RESERVATION_ID,
+                        ReservationHistoryAction.UPDATED);
+        verify(reservationHistoryRepository, never())
+                .findByReservationIdOrderByChangedAtAscIdAsc(RESERVATION_ID);
+    }
+
     @Test
     public void shouldNotCreateHistoryWhenReservationCreationFailsValidation() {
         ReservationDto invalidDto = validReservationDto();
@@ -330,8 +369,6 @@ public class ReservationServiceImplHistoryTest {
         verify(reservationRepository, never()).save(any(Reservation.class));
         assertFalse(reservation.getStatus() == ReservationStatus.APPROVED);
     }
-    
-    // helpers
 
     private ReservationDto validReservationDto() {
         return new ReservationDto(

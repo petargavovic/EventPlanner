@@ -6,6 +6,7 @@ package com.events.planner.controller;
 
 import com.events.planner.dto.ReservationDto;
 import com.events.planner.dto.ReservationHistoryDto;
+import com.events.planner.entity.ReservationHistoryAction;
 import com.events.planner.service.ReservationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -70,15 +71,19 @@ public class ReservationController {
     }
     
     @Operation(summary = "Get reservation history",
-            description = "Returns all stored snapshots for a reservation in chronological order. ")
+            description = "Returns stored snapshots for a reservation in chronological order. "
+                    + "Optionally filters them by action.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK")
     })
     @GetMapping("/{id}/history")
     public ResponseEntity<List<ReservationHistoryDto>> getHistory(
             @Parameter(description = "Reservation id", example = "1")
-            @PathVariable Long id) {
-        return ResponseEntity.ok(reservationService.getHistory(id));
+            @PathVariable Long id,
+            @Parameter(description = "Optional history action filter",
+                    example = "UPDATED")
+            @RequestParam(required = false) ReservationHistoryAction action) {
+        return ResponseEntity.ok(reservationService.getHistory(id, action));
     }
 
     @Operation(summary = "Get all reservations (paged) with filters")

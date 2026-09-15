@@ -6,6 +6,7 @@ package com.events.planner.service;
 
 import com.events.planner.dto.ReservationDto;
 import com.events.planner.dto.ReservationHistoryDto;
+import com.events.planner.entity.ReservationHistoryAction;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
@@ -20,7 +21,7 @@ public interface ReservationService {
 
     ReservationDto getById(Long id) throws Exception;
 
-    List<ReservationHistoryDto> getHistory(Long reservationId);
+    List<ReservationHistoryDto> getHistory(Long reservationId, ReservationHistoryAction action);
 
     Page<ReservationDto> getAll(int page, int size);
 

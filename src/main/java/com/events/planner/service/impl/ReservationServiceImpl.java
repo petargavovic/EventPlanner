@@ -106,10 +106,19 @@ public class ReservationServiceImpl implements ReservationService {
     }
     
     @Override
-    public List<ReservationHistoryDto> getHistory(Long reservationId) {
-        return reservationHistoryRepository
-                .findByReservationIdOrderByChangedAtAscIdAsc(reservationId)
-                .stream()
+    public List<ReservationHistoryDto> getHistory(
+            Long reservationId,
+            ReservationHistoryAction action) {
+
+        List<ReservationHistory> history = action == null
+                ? reservationHistoryRepository
+                        .findByReservationIdOrderByChangedAtAscIdAsc(reservationId)
+                : reservationHistoryRepository
+                        .findByReservationIdAndActionOrderByChangedAtAscIdAsc(
+                                reservationId,
+                                action);
+
+        return history.stream()
                 .map(reservationHistoryMapper::toDto)
                 .toList();
     }
