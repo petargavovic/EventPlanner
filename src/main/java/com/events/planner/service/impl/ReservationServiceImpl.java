@@ -5,6 +5,7 @@
 package com.events.planner.service.impl;
 
 import com.events.planner.dto.ReservationDto;
+import com.events.planner.dto.ReservationHistoryDto;
 import com.events.planner.entity.Event;
 import com.events.planner.entity.Hall;
 import com.events.planner.entity.Reservation;
@@ -13,6 +14,7 @@ import com.events.planner.entity.ReservationHistoryAction;
 import com.events.planner.entity.ReservationStatus;
 import com.events.planner.entity.User;
 import com.events.planner.mapper.impl.ReservationDtoEntityMapper;
+import com.events.planner.mapper.impl.ReservationHistoryDtoEntityMapper;
 import com.events.planner.repository.EventRepository;
 import com.events.planner.repository.HallRepository;
 import com.events.planner.repository.ReservationRepository;
@@ -21,6 +23,7 @@ import com.events.planner.repository.UserRepository;
 import com.events.planner.service.ReservationService;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,19 +46,22 @@ public class ReservationServiceImpl implements ReservationService {
     private final HallRepository hallRepository;
     private final EventRepository eventRepository;
     private final ReservationDtoEntityMapper reservationMapper;
+    private final ReservationHistoryDtoEntityMapper reservationHistoryMapper;
 
     public ReservationServiceImpl(ReservationRepository reservationRepository,
             ReservationHistoryRepository reservationHistoryRepository,
             UserRepository userRepository,
             HallRepository hallRepository,
             EventRepository eventRepository,
-            ReservationDtoEntityMapper reservationMapper) {
+            ReservationDtoEntityMapper reservationMapper,
+            ReservationHistoryDtoEntityMapper reservationHistoryMapper) {
         this.reservationRepository = reservationRepository;
         this.reservationHistoryRepository = reservationHistoryRepository;
         this.userRepository = userRepository;
         this.hallRepository = hallRepository;
         this.eventRepository = eventRepository;
         this.reservationMapper = reservationMapper;
+        this.reservationHistoryMapper = reservationHistoryMapper;
     }
 
     @Override
@@ -95,6 +101,15 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationRepository.findById(id)
                 .map(reservationMapper::toDto)
                 .orElseThrow(() -> new Exception("Reservation not found."));
+    }
+    
+    @Override
+    public List<ReservationHistoryDto> getHistory(Long reservationId) {
+        return reservationHistoryRepository
+                .findByReservationIdOrderByChangedAtAscIdAsc(reservationId)
+                .stream()
+                .map(reservationHistoryMapper::toDto)
+                .toList();
     }
 
     @Override
