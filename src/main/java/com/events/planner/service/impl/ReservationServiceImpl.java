@@ -8,12 +8,15 @@ import com.events.planner.dto.ReservationDto;
 import com.events.planner.entity.Event;
 import com.events.planner.entity.Hall;
 import com.events.planner.entity.Reservation;
+import com.events.planner.entity.ReservationHistory;
+import com.events.planner.entity.ReservationHistoryAction;
 import com.events.planner.entity.ReservationStatus;
 import com.events.planner.entity.User;
 import com.events.planner.mapper.impl.ReservationDtoEntityMapper;
 import com.events.planner.repository.EventRepository;
 import com.events.planner.repository.HallRepository;
 import com.events.planner.repository.ReservationRepository;
+import com.events.planner.repository.ReservationHistoryRepository;
 import com.events.planner.repository.UserRepository;
 import com.events.planner.service.ReservationService;
 import java.time.LocalDateTime;
@@ -25,6 +28,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
@@ -34,17 +38,20 @@ import org.springframework.stereotype.Service;
 public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final ReservationHistoryRepository reservationHistoryRepository;
     private final UserRepository userRepository;
     private final HallRepository hallRepository;
     private final EventRepository eventRepository;
     private final ReservationDtoEntityMapper reservationMapper;
 
     public ReservationServiceImpl(ReservationRepository reservationRepository,
+            ReservationHistoryRepository reservationHistoryRepository,
             UserRepository userRepository,
             HallRepository hallRepository,
             EventRepository eventRepository,
             ReservationDtoEntityMapper reservationMapper) {
         this.reservationRepository = reservationRepository;
+        this.reservationHistoryRepository = reservationHistoryRepository;
         this.userRepository = userRepository;
         this.hallRepository = hallRepository;
         this.eventRepository = eventRepository;
@@ -52,6 +59,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public ReservationDto create(ReservationDto dto, String email) throws Exception {
         validateReservation(dto, false);
 
@@ -77,6 +85,8 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.PENDING);
 
         Reservation saved = reservationRepository.save(reservation);
+        saveHistory(saved, ReservationHistoryAction.CREATED, email);
+        
         return reservationMapper.toDto(saved);
     }
 
@@ -118,9 +128,21 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationRepository.findByStatus(reservationStatus, pageable)
                 .map(reservationMapper::toDto);
     }
-
+    
     @Override
+    @Transactional
     public ReservationDto update(Long id, ReservationDto dto, Authentication authentication) throws Exception {
+        if (authentication == null) {
+            throw new Exception("Authentication is required.");
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        return updateReservation(id, dto, authentication.getName(), isAdmin);
+    }
+
+    private ReservationDto updateReservation(Long id, ReservationDto dto, String email, boolean isAdmin) throws Exception {
         validateReservation(dto, true);
 
         Reservation reservation = reservationRepository.findById(id)
@@ -135,13 +157,7 @@ public class ReservationServiceImpl implements ReservationService {
         Event event = eventRepository.findById(dto.getEventId())
                 .orElseThrow(() -> new Exception("Event not found."));
 
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        String email = authentication.getName();
-
         if (!isAdmin) {
-
             if (!reservation.getUser().getEmail().equals(email)) {
                 throw new Exception("You can only edit your own reservations.");
             }
@@ -149,10 +165,6 @@ public class ReservationServiceImpl implements ReservationService {
             if (reservation.getStatus() != ReservationStatus.PENDING) {
                 throw new Exception("Only PENDING reservations can be edited.");
             }
-        }
-
-        if (event.getCapacity() > hall.getCapacity()) {
-            throw new Exception("Selected event requires more capacity than the chosen hall.");
         }
 
         if (reservation.getStatus() == ReservationStatus.APPROVED) {
@@ -181,10 +193,13 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setEvent(event);
 
         Reservation saved = reservationRepository.save(reservation);
+        saveHistory(saved, ReservationHistoryAction.UPDATED, email);
+
         return reservationMapper.toDto(saved);
     }
 
     @Override
+    @Transactional
     public ReservationDto updateStatus(Long id, String status, Authentication authentication) throws Exception {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new Exception("Reservation not found."));
@@ -228,14 +243,18 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(newStatus);
 
         Reservation saved = reservationRepository.save(reservation);
+        saveHistory(saved, ReservationHistoryAction.UPDATED, email);
+        
         return reservationMapper.toDto(saved);
     }
 
     @Override
-    public void delete(Long id) throws Exception {
-        if (!reservationRepository.existsById(id)) {
-            throw new Exception("Reservation not found.");
-        }
+    @Transactional
+    public void delete(Long id, String email) throws Exception {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new Exception("Reservation not found."));
+
+        saveHistory(reservation, ReservationHistoryAction.DELETED, email);
         reservationRepository.deleteById(id);
     }
 
@@ -329,5 +348,25 @@ public class ReservationServiceImpl implements ReservationService {
             throw new Exception("Invalid reservation status.");
         }
     }
+    
+    private void saveHistory(Reservation reservation, ReservationHistoryAction action, String changedBy) {
 
+    ReservationHistory history = new ReservationHistory();
+
+    history.setReservationId(reservation.getId());
+    history.setAction(action);
+    history.setChangedAt(LocalDateTime.now());
+    history.setChangedBy(changedBy);
+
+    history.setStart(reservation.getStart());
+    history.setEnd(reservation.getEnd());
+    history.setStatus(reservation.getStatus());
+    history.setDescription(reservation.getDescription());
+
+    history.setUserId(reservation.getUser().getId());
+    history.setHallId(reservation.getHall().getId());
+    history.setEventId(reservation.getEvent().getId());
+
+    reservationHistoryRepository.save(history);
+}
 }
