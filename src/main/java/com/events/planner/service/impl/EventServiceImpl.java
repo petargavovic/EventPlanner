@@ -36,17 +36,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDto create(EventDto dto) throws Exception {
-        if (dto.getName() == null || dto.getName().isBlank()) {
-            throw new Exception("Event name is required.");
-        }
-        if (dto.getType() == null || dto.getType().isBlank()) {
-            throw new Exception("Event type is required.");
-        }
-        if (dto.getCapacity() < 0) {
-            throw new Exception("Capacity cannot be negative.");
-        }
-
-        parseEventType(dto.getType());
+        validateEvent(dto);
 
         Event event = eventMapper.toEntity(dto);
 
@@ -97,17 +87,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new Exception("Event not found."));
 
-        if (dto.getName() == null || dto.getName().isBlank()) {
-            throw new Exception("Event name is required.");
-        }
-        if (dto.getType() == null || dto.getType().isBlank()) {
-            throw new Exception("Event type is required.");
-        }
-        if (dto.getCapacity() < 0) {
-            throw new Exception("Capacity cannot be negative.");
-        }
-
-        parseEventType(dto.getType());
+        validateEvent(dto);
 
         eventMapper.updateEntity(event, dto);
 
@@ -129,6 +109,20 @@ public class EventServiceImpl implements EventService {
             throw new Exception("Event not found.");
         }
         eventRepository.deleteById(id);
+    }
+
+    private void validateEvent(EventDto dto) throws Exception {
+        if (dto.getName() == null || dto.getName().isBlank()) {
+            throw new Exception("Event name is required.");
+        }
+        if (dto.getType() == null || dto.getType().isBlank()) {
+            throw new Exception("Event type is required.");
+        }
+        if (dto.getCapacity() < 0) {
+            throw new Exception("Capacity cannot be negative.");
+        }
+
+        parseEventType(dto.getType());
     }
 
     private EventType parseEventType(String type) throws Exception {

@@ -40,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ReservationServiceImpl implements ReservationService {
 
+    private static final String RESERVATION_NOT_FOUND = "Reservation not found.";
+
     private final ReservationRepository reservationRepository;
     private final ReservationHistoryRepository reservationHistoryRepository;
     private final UserRepository userRepository;
@@ -65,7 +67,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ReservationDto create(ReservationDto dto, String email) throws Exception {
         validateReservation(dto, false);
 
@@ -100,7 +102,7 @@ public class ReservationServiceImpl implements ReservationService {
     public ReservationDto getById(Long id) throws Exception {
         return reservationRepository.findById(id)
                 .map(reservationMapper::toDto)
-                .orElseThrow(() -> new Exception("Reservation not found."));
+                .orElseThrow(() -> new Exception(RESERVATION_NOT_FOUND));
     }
     
     @Override
@@ -145,7 +147,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
     
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ReservationDto update(Long id, ReservationDto dto, Authentication authentication) throws Exception {
         if (authentication == null) {
             throw new Exception("Authentication is required.");
@@ -161,7 +163,7 @@ public class ReservationServiceImpl implements ReservationService {
         validateReservation(dto, true);
 
         Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new Exception("Reservation not found."));
+                .orElseThrow(() -> new Exception(RESERVATION_NOT_FOUND));
 
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new Exception("User not found."));
@@ -214,10 +216,10 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ReservationDto updateStatus(Long id, String status, Authentication authentication) throws Exception {
         Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new Exception("Reservation not found."));
+                .orElseThrow(() -> new Exception(RESERVATION_NOT_FOUND));
 
         ReservationStatus newStatus = parseReservationStatus(status);
 
@@ -264,10 +266,10 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id, String email) throws Exception {
         Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new Exception("Reservation not found."));
+                .orElseThrow(() -> new Exception(RESERVATION_NOT_FOUND));
 
         saveHistory(reservation, ReservationHistoryAction.DELETED, email);
         reservationRepository.deleteById(id);
@@ -317,6 +319,8 @@ public class ReservationServiceImpl implements ReservationService {
                 break;
             case "created":
                 sortBy = "timestamp";
+                break;
+            default:
                 break;
         }
 
