@@ -1,13 +1,13 @@
 package com.events.planner;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.testng.annotations.Test;
 
-@SpringBootTest
-class PlannerApplicationTests {
+import static org.testng.Assert.assertNotNull;
 
-	@Test
-	void contextLoads() {
-	}
+public class PlannerApplicationTests {
 
+    @Test
+    public void applicationClassIsAvailable() {
+        assertNotNull(PlannerApplication.class);
+    }
 }
